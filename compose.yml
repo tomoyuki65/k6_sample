@@ -1,0 +1,37 @@
+services:
+  # 負荷テスト用スクリプトの実行環境
+  k6:
+    container_name: grafana-k6
+    image: grafana/k6
+    ports:
+      - 6565:6565
+    volumes:
+      - ./scripts:/scripts
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+  # データ収集用環境
+  prometheus:
+    container_name: prom-prometheus
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - "--web.enable-remote-write-receiver"
+      - "--config.file=/etc/prometheus/prometheus.yml"
+  # データの可視化・分析環境
+  grafana:
+    container_name: grafana-grafana
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana-provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
